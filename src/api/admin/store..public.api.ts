@@ -17,7 +17,7 @@ export const getSellerProducts = async (id: string, page?: number, limit?: numbe
   return response.data;
 }
 
-export const getSellerReviews = async (id: string, page:number, limit: number,star: StarFilter): Promise<{ data: Review[], meta: PaginationMeta,counts:RatingCount }> => {
-  const response = await baseApi.get(`/stores/${encodeURIComponent(id)}/reviews`, { params: { page, limit, star } });
+export const getSellerReviews = async (id: string, page:number, limit: number,rating: StarFilter): Promise<{ data: Review[], meta: PaginationMeta,counts:RatingCount }> => {
+  const response = await baseApi.get(`/stores/${encodeURIComponent(id)}/reviews`, { params: { page, limit, rating } });
   return response.data;
 }

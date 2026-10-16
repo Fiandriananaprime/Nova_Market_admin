@@ -32,6 +32,6 @@ export const getUserById = async (id: string): Promise<User> => {
 };
 
 export const updateUserStatus = async (id: string, status: status): Promise<User> => {
-    const response = await api.patch(`/admin/users/${id}/status`, { status });
+    const response = await api.patch(`/admin/users/${id}/status`, status);
     return response.data;
 }

@@ -1,7 +1,8 @@
 import { Address } from "../user"
 import { PaginationMeta } from "../catalog/product";
-import { paymentMethod, PaymentStatus } from "./payment"
-export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'preparing' | 'shipped' | 'delivered' | 'cancelled';
+export type paymentMethod = 'mvola' | 'orange_money' | 'card' | 'cod';
+export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded' | 'partially_refunded';
+export type OrderStatus = 'pending' | 'confirmed' | 'processing' | 'preparing' | 'shipped' | 'delivered' | 'cancelled' | 'refunded';
 export type deliveryMethod = 'standard' | 'express' | 'pickup';
 
 export type OrderQueryParam = {
@@ -11,7 +12,11 @@ export type OrderQueryParam = {
     status?: OrderStatus,
     paymentMethod?: paymentMethod,
     sortAmount?: 'asc' | 'desc',
-    sortDate?: 'asc' | 'desc'
+    sortDate?: 'asc' | 'desc',
+    deliveryStatus?: string,
+    sellerId?: string,
+    buyerId?: string,
+    deliveryId?: string,
 }
 export interface OrderItem {
     productId: string,
@@ -26,6 +31,15 @@ export interface OrderSeller {
     id: string,
     name: string
 }
+export interface TrackingPoint {
+    id?: string;
+    latitude: number;
+    longitude: number;
+    timestamp: string;
+    accuracy?: number | null;
+    speed?: number | null;
+    heading?: number | null;
+}
 export interface Order {
     id: string,
     buyerId: string,
@@ -33,17 +47,30 @@ export interface Order {
     items: OrderItem[],
     sellers: OrderSeller[],
     subtotal: number,
-    shippingFee: number,
+    deliveryFee: number,
     total: number,
     status: OrderStatus,
     deliveryMethod: deliveryMethod,
     paymentMethod: paymentMethod,
     paymentStatus: PaymentStatus,
     address: Address
-    tracking: string,
+    tracking: TrackingPoint[],
+    deliveryTracking?: DeliveryTracking;
+    deliveryId?: string | null;
     estimatedDelivery: string,
     note?: string,
     createdAt: string
+}
+
+export interface DeliveryTracking {
+    status: string;
+    pendingReason?: string | null;
+    currentLocation?: TrackingPoint | null;
+    estimatedDelivery?: string | null;
+    updatedAt: string;
+    driver?: { id: string; name: string; phone?: string | null; vehicle?: string | null } | null;
+    history?: TrackingPoint[];
+    events?: Array<{ id?: string; status?: string; description?: string; timestamp?: string }>;
 }
 
 export interface OrderResponse {
@@ -63,7 +90,7 @@ export interface OrderResponse {
 }
 
 export interface OrderSellerDetails extends OrderSeller {
-    avatarUrl: string;
+    avatarUrl?: string;
 }
 
 export interface OrderDetails extends Order {

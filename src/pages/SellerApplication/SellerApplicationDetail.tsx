@@ -5,10 +5,7 @@ import {
   Building2,
   Calendar,
   Check,
-  Mail,
   MapPin,
-  Phone,
-  User,
   X,
 } from 'lucide-react';
 import { Button } from '@/components/ui';
@@ -78,7 +75,7 @@ const SellerApplicationDetails = () => {
 
       const updatedApplication =
         await updateSellerApplicationStatus(id, {
-          action: decision,
+          action: decision === 'approve' ? 'approved' : 'rejected',
           reason: reason.trim() || undefined,
         });
 
@@ -195,50 +192,32 @@ const SellerApplicationDetails = () => {
 
               <div>
                 <h2 className="text-xl font-semibold text-secondary-foreground">
-                  {application.businessName}
+                  {application.store?.name ?? t("Unnamed business")}
                 </h2>
 
                 <p className="text-sm text-muted-foreground">
-                  {application.category}
+                  {application.store?.businessType ?? t("Business type unavailable")}
                 </p>
               </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <InfoItem
-                icon={<User />}
-                label={t("Owner")}
-                value={application.owner}
-              />
-
-              <InfoItem
                 icon={<Building2 />}
                 label={t("Business name")}
-                value={application.businessName}
-              />
-
-              <InfoItem
-                icon={<Mail />}
-                label="Email"
-                value={application.email}
-              />
-
-              <InfoItem
-                icon={<Phone />}
-                label={t("Phone")}
-                value={application.phone}
+                value={application.store?.name ?? t("Unnamed business")}
               />
 
               <InfoItem
                 icon={<MapPin />}
                 label={t("Location")}
-                value={application.location}
+                value={application.store?.location ?? t("Location unavailable")}
               />
 
               <InfoItem
                 icon={<Building2 />}
-                label={t("Category")}
-                value={application.category}
+                label={t("Business type")}
+                value={application.store?.businessType ?? t("Business type unavailable")}
               />
             </div>
           </Section>
@@ -252,7 +231,7 @@ const SellerApplicationDetails = () => {
               <InfoItem
                 icon={<Calendar />}
                 label={t("Application date")}
-                value={formatDate(application.date)}
+                value={application.submittedAt ? formatDate(application.submittedAt) : t("Date unavailable")}
               />
 
               <InfoItem
@@ -262,15 +241,9 @@ const SellerApplicationDetails = () => {
               />
 
               <InfoItem
-                icon={<User />}
-                label={t("Applicant")}
-                value={application.owner}
-              />
-
-              <InfoItem
                 icon={<Building2 />}
-                label={t("Business")}
-                value={application.businessName}
+                label={t("Applicant ID")}
+                value={application.applicantUserId}
               />
             </div>
           </Section>

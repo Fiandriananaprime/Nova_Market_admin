@@ -1,8 +1,8 @@
 import { api } from "../axios";
-import { AdminMetrics, AdminRevenue } from "@/type/admin/dashboard";
+import { AdminDashboardResponse } from "@/type/admin/dashboard";
 import { TopSeller } from "@/type/admin/seller";
 
-export const getDashboardStats = async (): Promise<{ metrics: AdminMetrics; revenueSeries: AdminRevenue[] }> => {
+export const getDashboardStats = async (): Promise<AdminDashboardResponse> => {
   const response = await api.get("/admin/dashboard");
   return response.data;
 };

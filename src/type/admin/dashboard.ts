@@ -8,8 +8,29 @@ export type AdminMetrics = {
     pendingProducts: number;
 };
 
+export type AdminTopProduct = {
+    productId?: string;
+    name?: string;
+    storeName?: string;
+    unitsSold?: number;
+    revenue?: number;
+};
+
+export type AdminDashboardResponse = {
+    metrics: AdminMetrics;
+    revenueSeries: AdminDashboardRevenuePoint[];
+    topProducts?: AdminTopProduct[];
+};
+
 export type AdminRevenue = {
     month: string;
+    revenue: number;
+    sellers: number;
+    buyers: number;
+};
+
+export type AdminDashboardRevenuePoint = {
+    day: string;
     revenue: number;
     sellers: number;
     buyers: number;

@@ -64,7 +64,7 @@ const ProductAbout = () => {
     navigate(`/admin/products/${productId}${query}`);
   };
 
-  const handleStatusChange = async (status: Product['status']) => {
+  const handleStatusChange = async (status: 'approved' | 'rejected') => {
     if (!product) return;
 
     try {
@@ -79,9 +79,7 @@ const ProductAbout = () => {
           `Product ${status}.`,
           status === 'approved'
             ? 'Produit approuvé.'
-            : status === 'rejected'
-              ? 'Produit rejeté.'
-              : 'Produit désactivé.',
+            : 'Produit rejeté.',
         ),
         'success',
       );
@@ -104,7 +102,7 @@ const ProductAbout = () => {
         const productData = await getProductById(id);
         setProduct(productData);
 
-        const sellerData = await getSellerById(productData.sellerId);
+        const sellerData = await getSellerById(productData.storeId);
         setSeller(sellerData);
 
         const reviewsData = await getProductReviews(id);
@@ -149,7 +147,6 @@ const ProductAbout = () => {
       reviews={reviews}
       onBack={() => navigate(-1)}
       onApprove={() => handleStatusChange('approved')}
-      onDisable={() => handleStatusChange('inactive')}
       onReject={() => handleStatusChange('rejected')}
       onPrevious={() => previousProductId && navigateToProduct(previousProductId)}
       onNext={() => nextProductId && navigateToProduct(nextProductId)}

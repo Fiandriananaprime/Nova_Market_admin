@@ -65,11 +65,15 @@ const StoreAdminDetail = () => {
     <div>
       <div className="bg-foreground rounded-2xl overflow-hidden mb-6 relative">
         <div className="relative h-48">
-          <img
-            src={store.cover}
-            alt={store.name}
-            className="w-full h-full object-cover opacity-60"
-          />
+          {store.cover ? (
+            <img
+              src={store.cover}
+              alt={store.name}
+              className="w-full h-full object-cover opacity-60"
+            />
+          ) : (
+            <div className="h-full w-full bg-secondary" />
+          )}
 
           <div className="absolute inset-0 bg-gradient-to-t from-foreground via-foreground/30 to-transparent" />
 
@@ -185,4 +189,3 @@ const StoreAdminDetail = () => {
 };
 
 export default StoreAdminDetail;
-

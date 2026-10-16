@@ -4,9 +4,18 @@ import { RotateCcw, ZoomIn, ZoomOut, TrendingUp, TrendingDown,Minus } from 'luci
 import { useState } from 'react';
 
 import { Card } from '../ui/Card';
-type BarStatProp={
-    title:string,
-  data:any[] | undefined
+type ChartPoint = {
+  month?: string;
+  day?: string;
+  revenue?: number;
+  buyers?: number;
+  sellers?: number;
+};
+
+type BarStatProp = {
+    title: string;
+    data: ChartPoint[] | undefined;
+    xAxisKey?: 'month' | 'day';
 }
 
 const zoomSteps = [1, 1.25, 1.6, 2];
@@ -48,14 +57,14 @@ function ChartZoomControls({ zoom, onZoomChange }: { zoom: number; onZoomChange:
   );
 }
 
-function getZoomedData(data: any[] | undefined, zoom: number) {
+function getZoomedData<T>(data: T[] | undefined, zoom: number): T[] {
   if (!data?.length || zoom === 1) return data ?? [];
   const visibleCount = Math.max(2, Math.ceil(data.length / zoom));
   const start = Math.max(0, Math.floor((data.length - visibleCount) / 2));
   return data.slice(start, start + visibleCount);
 }
 
-const BarStat = ({title,data}: BarStatProp) => {
+const BarStat = ({title,data,xAxisKey = 'month'}: BarStatProp) => {
   const [zoom, setZoom] = useState(1);
   const chartData = getZoomedData(data, zoom);
   const maxRevenue = Math.max(...chartData.map((point) => Number(point.revenue ?? 0)), 0);
@@ -68,7 +77,7 @@ const BarStat = ({title,data}: BarStatProp) => {
           <ResponsiveContainer width="100%" height={200}>
       <BarChart data={chartData} barSize={20}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-              <XAxis dataKey="month" tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+              <XAxis dataKey={xAxisKey} tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
               <YAxis domain={[0, maxRevenue / zoom || 1]} tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v / 1000000).toFixed(0)}M`} />
               <Tooltip formatter={(v) => [formatMillionAr(Number(v ?? 0)), 'Revenue']} contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px' }} />
               <Bar dataKey="revenue" fill="#0077B6" radius={[4, 4, 0, 0]} />
@@ -78,7 +87,7 @@ const BarStat = ({title,data}: BarStatProp) => {
     )
 }
 
-const LineStat = ({title,data}: BarStatProp) => {
+const LineStat = ({title,data,xAxisKey = 'month'}: BarStatProp) => {
     const [zoom, setZoom] = useState(1);
     const chartData = getZoomedData(data, zoom);
     const maxUsers = Math.max(...chartData.flatMap((point) => [Number(point.buyers ?? 0), Number(point.sellers ?? 0)]), 0);
@@ -91,7 +100,7 @@ const LineStat = ({title,data}: BarStatProp) => {
           <ResponsiveContainer width="100%" height={200}>
             <LineChart data={chartData}>
               <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" vertical={false} />
-              <XAxis dataKey="month" tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
+              <XAxis dataKey={xAxisKey} tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} />
               <YAxis domain={[0, maxUsers / zoom || 1]} tick={{ fontSize: 11, fill: 'var(--muted-foreground)' }} axisLine={false} tickLine={false} tickFormatter={v => `${(v / 1000).toFixed(0)}k`} />
               <Tooltip contentStyle={{ background: 'var(--card)', border: '1px solid var(--border)', borderRadius: '8px', fontSize: '12px' }} />
               <Line dataKey="buyers" stroke="#0077B6" strokeWidth={2.5} dot={false} name="Buyers" />
@@ -131,5 +140,3 @@ export function StatCard({ title, value, change, icon, color = '#0077B6' }: Stat
 }
 
 export { BarStat, LineStat };
-
-

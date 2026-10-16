@@ -11,10 +11,12 @@ import {
 import { Button, Input } from "../components/ui";
 import { useApp } from "../contexts/AppContext";
 import { useTranslation } from "react-i18next";
-import { LoginRequest } from "../type/auth";
-import { login } from "../api/auth.api";
+import type { LoginRequest } from "../type/auth";
+import { login, logout } from "../api/auth.api";
 import { getApiErrorMessage } from "../api/errorMessage";
 import { useToast } from "../contexts/ToastContext";
+import Logo from "../assets/NovaLogo.png";
+import GhostFibers from "../components/ui/GhostFibers";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -23,7 +25,7 @@ export default function Login() {
   const { toast } = useToast();
 
   const [form, setForm] = useState<LoginRequest>({
-    email: "",
+    identifier: "",
     password: "",
     remember: false,
   });
@@ -38,9 +40,9 @@ export default function Login() {
     e.preventDefault();
     setError(null);
 
-    if (!form.email.trim() || !form.password.trim()) {
+    if (!form.identifier.trim() || !form.password.trim()) {
       const message =
-        "Veuillez saisir votre email et votre mot de passe.";
+        "Veuillez saisir votre identifiant et votre mot de passe.";
 
       setError(message);
       return;
@@ -57,7 +59,8 @@ export default function Login() {
        * Even if the API returns a valid user with another role,
        * this application must not create a session for that role.
        */
-      if (data.user.role !== "admin") {
+      if (data.role !== "admin") {
+        await logout();
         const message =
           "Accès refusé. Ce portail est réservé aux administrateurs.";
 
@@ -68,18 +71,8 @@ export default function Login() {
       }
 
       localStorage.setItem(
-        "accessToken",
-        data.tokens.accessToken
-      );
-
-      localStorage.setItem(
-        "refreshToken",
-        data.tokens.refreshToken
-      );
-
-      localStorage.setItem(
         "user",
-        JSON.stringify(data.user)
+        JSON.stringify(data)
       );
 
       setUserRole("admin");
@@ -119,18 +112,33 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
-      <div className="w-full max-w-sm">
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center gap-2 mb-4">
-            <div className="w-10 h-10 rounded-xl bg-primary flex items-center justify-center">
-              <ShoppingBag className="w-5 h-5 text-white" />
-            </div>
-
-            <span className="font-bold text-xl font-display text-secondary-foreground">
-              MasoMarket
-            </span>
+    <div className="min-h-screen bg-[#f4f7f6] p-3 sm:p-6">
+      <div className="mx-auto grid min-h-[calc(100vh-1.5rem)] max-w-6xl overflow-hidden rounded-[28px] border border-border/70 bg-card shadow-2xl shadow-slate-900/10 sm:min-h-[calc(100vh-3rem)] lg:grid-cols-[1.05fr_.95fr]">
+        <aside className="relative hidden overflow-hidden bg-[#123b3d] px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between">
+          <div aria-hidden="true" className="pointer-events-none absolute inset-0 opacity-80">
+            <GhostFibers
+              glowColor="#4fd1c5"
+              lineColor="#dcfff8"
+              speed={0.12}
+              scale={2.2}
+              rotationSpeed={0.12}
+              layers={4}
+              twist={0.08}
+              threads={1}
+              glow={1.8}
+              brightness={1.1}
+              vignette={0.72}
+            />
           </div>
+          <div className="absolute -right-24 -top-24 h-80 w-80 rounded-full border border-white/10"/><div className="absolute -right-8 -top-8 h-48 w-48 rounded-full border border-white/10"/>
+          <div className="relative flex items-center gap-3"><img src={Logo} alt="NovaMarket" className="h-11 w-11 rounded-xl bg-white p-1 object-contain"/><span className="font-display text-lg font-bold">NovaMarket</span></div>
+          <div className="relative max-w-md"><div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-medium"><span className="h-2 w-2 rounded-full bg-emerald-300"/>{t('ADMIN WORKSPACE')}</div><h2 className="font-display text-4xl font-bold leading-tight">{t('A clearer view of your marketplace.')}</h2><p className="mt-4 text-sm leading-6 text-emerald-50/75">{t('Manage sellers, orders and platform activity from one secure workspace.')}</p></div>
+          <div className="relative flex items-center gap-2 text-xs text-emerald-50/60"><ShoppingBag className="h-4 w-4"/>NovaMarket · {t('Administration')}</div>
+        </aside>
+        <div className="flex items-center justify-center px-5 py-10 sm:px-10">
+          <div className="w-full max-w-[390px]">
+        <div className="mb-8 text-center lg:text-left">
+          <div className="mb-7 flex items-center justify-center gap-2 lg:hidden"><img src={Logo} alt="NovaMarket" className="h-10 w-10 object-contain"/><span className="font-display text-lg font-bold text-secondary-foreground">NovaMarket</span></div>
 
           <h1 className="text-2xl font-bold font-display text-secondary-foreground mb-1">
             {t("Sign in")}
@@ -144,14 +152,14 @@ export default function Login() {
         </div>
 
         <form onSubmit={handleSubmit}>
-          <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
+            <div className="rounded-2xl border border-border/80 bg-card p-6 shadow-sm sm:p-7">
             <div className="space-y-4">
               <Input
-                label={t("Email-Adresse-email")}
-                type="email"
-                name="email"
-                placeholder="admin@email.com"
-                value={form.email}
+                label={t("Identifier")}
+                type="text"
+                name="identifier"
+                placeholder="admin"
+                value={form.identifier}
                 onChange={handleChange}
                 icon={
                   <Mail className="w-4 h-4" />
@@ -212,7 +220,7 @@ export default function Login() {
                 </span>
               </label>
 
-              <Link
+            <Link
                 to="/forgot-password"
                 className="text-sm text-primary hover:underline"
               >
@@ -240,9 +248,11 @@ export default function Login() {
           </div>
         </form>
 
-        <p className="text-center text-sm text-muted-foreground mt-5">
-          Admin access only
+        <p className="mt-5 text-center text-xs text-muted-foreground">
+          {t('Protected administrator access')} · NovaMarket
         </p>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -46,9 +46,10 @@ export const getPaymentsSummary = async ({
   return response.data;
 };
 
-export const refundTransaction = async (id: string) => {
+export const refundTransaction = async (id: string, amount: number) => {
   const response = await api.post<Transaction>(
-    `/admin/payments/transactions/${id}/refund`
+    `/admin/payments/transactions/${encodeURIComponent(id)}/refund`,
+    { amount },
   );
 
   return response.data;
@@ -58,10 +59,12 @@ export const getAdminPromotions = async ({
   page,
   limit,
   status,
+  search,
 }: {
   page?: number;
   limit?: number;
   status?: "active" | "scheduled" | "inactive" | "expired";
+  search?: string;
 }) => {
   const response = await api.get<{
     data: Promotion[];
@@ -71,12 +74,20 @@ export const getAdminPromotions = async ({
       page,
       limit,
       status,
+      search,
     },
   });
 
   return response.data;
 };
 
-export const deleteAdminPromotion = async (id: string) => {
-  await api.delete(`/admin/promotions/${id}`);
+export const updateAdminPromotionStatus = async (
+  id: string,
+  status: "active" | "inactive",
+): Promise<Promotion> => {
+  const response = await api.patch<Promotion>(
+    `/admin/promotions/${encodeURIComponent(id)}/status`,
+    { status },
+  );
+  return response.data;
 };

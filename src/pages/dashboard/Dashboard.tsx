@@ -6,24 +6,24 @@ import { DollarSign, ShoppingCart, Users, Store, Package, AlertCircle } from 'lu
 
 import { StatCard, StatusBadge, Badge, BarStat, LineStat } from '../../components/ui';
 import  TableCard, { Column }  from '@/components/Stats/TableCard';
-import { AdminMetrics, AdminRevenue} from '@/type/admin/dashboard';
+import { AdminDashboardRevenuePoint, AdminMetrics} from '@/type/admin/dashboard';
 import { OrderResponse } from '@/type/order/order';
-import { SellerApplicationResponse, TopSeller } from '@/type/admin/seller';
+import { SellerApplicationListResponse, TopSeller } from '@/type/admin/seller';
 
 import { getOrder } from '@/api/admin/order.api';
 import { getSellerApplications } from '@/api/admin/sellerApplication';
 import { getTopSeller, getDashboardStats } from '@/api/admin/dashboard.api';
 
-import {  formatMillionAr } from '@/hook/format';
+import { formatDate, formatMillionAr } from '@/hook/format';
 import { useToast } from '@/contexts/ToastContext';
 import { getApiErrorMessage } from '@/api/errorMessage';
 import { useTranslation } from 'react-i18next';
 
 type DashData = {
   metrics: AdminMetrics,
-  revenueSeries: AdminRevenue[],
+  revenueSeries: AdminDashboardRevenuePoint[],
   recentOrder: OrderResponse["data"],
-  sellerApplications: SellerApplicationResponse,
+  sellerApplications: SellerApplicationListResponse,
   topSellers: TopSeller[],
 }
 interface RecentOrder {
@@ -136,18 +136,17 @@ export default function AdminDashboard() {
           getSellerApplications({ page: 1, limit: 3, status: 'pending' }),
           getTopSeller(),
         ]);
-
         
         const { metrics, revenueSeries } = dashboard;
         const { data: recentOrder } = orders;
-        const { data: sellerApplicationsData, meta: sellerApplicationsMeta } = sellerApplications;
+        const { data: sellerApplicationsData, meta: sellerApplicationsMeta, counts: sellerApplicationsCounts } = sellerApplications;
         const { data: topSellers } = topSellerResponse;
 
         setDashBoardData({
           metrics,
           revenueSeries,
           recentOrder,
-          sellerApplications: { data: sellerApplicationsData, meta: sellerApplicationsMeta },
+          sellerApplications: { data: sellerApplicationsData, meta: sellerApplicationsMeta, counts: sellerApplicationsCounts },
           topSellers,
         });
       } catch (error) {
@@ -206,8 +205,8 @@ export default function AdminDashboard() {
 
       {/* Charts */}
       <div className="grid lg:grid-cols-2 gap-5">
-        <BarStat title={t("MarketPlace Revenue")} data={dashBoardData?.revenueSeries} />
-        <LineStat title={t("User Growth")} data={dashBoardData?.revenueSeries} />
+        <BarStat title={t("MarketPlace Revenue")} data={dashBoardData?.revenueSeries} xAxisKey="day" />
+        <LineStat title={t("User Growth")} data={dashBoardData?.revenueSeries} xAxisKey="day" />
       </div>
 
       {/* Tables grid */}
@@ -231,11 +230,11 @@ export default function AdminDashboard() {
             {dashBoardData?.sellerApplications.data.map(app => (
               <div key={app.id} className="px-5 py-4 flex items-center gap-3">
                 <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold text-sm flex-shrink-0">
-                  {app.businessName[0]}
+                  {(app.store?.name ?? t("Unnamed business"))[0]}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-medium text-sm text-secondary-foreground truncate">{app.businessName}</div>
-                  <div className="text-xs text-muted-foreground">{app.owner} · {app.category} · {app.date}</div>
+                  <div className="font-medium text-sm text-secondary-foreground truncate">{app.store?.name ?? t("Unnamed business")}</div>
+                  <div className="text-xs text-muted-foreground">{app.store?.location ?? t("Location unavailable")} · {app.store?.businessType ?? t("Business type unavailable")} · {app.submittedAt ? formatDate(app.submittedAt) : t("Date unavailable")}</div>
                 </div>
                 <Link to="/admin/sellers/applications" className="text-xs text-primary hover:underline flex-shrink-0">Review</Link>
               </div>

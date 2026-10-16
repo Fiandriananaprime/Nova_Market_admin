@@ -2,7 +2,6 @@ import { Eye, Package, Truck, CreditCard, User, Calendar } from "lucide-react";
 import { Order } from "@/type/order/order";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from 'react-router';
-import { CopyableText } from "@/components/ui";
 
 interface OrderCardProps {
   order: Order;
@@ -16,6 +15,7 @@ const statusStyles: Record<Order["status"], string> = {
   shipped: "bg-indigo-100 text-indigo-700",
   delivered: "bg-green-100 text-green-700",
   cancelled: "bg-red-100 text-red-700",
+  refunded: "bg-gray-100 text-gray-700",
 };
 
 const paymentStatusStyles: Record<Order["paymentStatus"], string> = {
@@ -23,6 +23,7 @@ const paymentStatusStyles: Record<Order["paymentStatus"], string> = {
   paid: "bg-green-100 text-green-700",
   failed: "bg-red-100 text-red-700",
   refunded: "bg-gray-100 text-gray-700",
+  partially_refunded: "bg-gray-100 text-gray-700",
 };
 
 
@@ -37,6 +38,7 @@ export default function OrderCard({ order }: OrderCardProps) {
       shipped: t("Shipped"),
       delivered: t("Delivered"),
       cancelled: t("Cancelled"),
+      refunded: t("Refunded"),
     };
     
     const paymentLabels: Record<Order["paymentStatus"], string> = {
@@ -44,6 +46,7 @@ export default function OrderCard({ order }: OrderCardProps) {
       paid: t("Paid"),
       failed: t("Failed"),
       refunded: t("Refunded"),
+      partially_refunded: t("Partially refunded"),
     };
     
     const deliveryLabels: Record<Order["deliveryMethod"], string> = {
@@ -181,10 +184,9 @@ export default function OrderCard({ order }: OrderCardProps) {
       {/* Footer */}
       <div className="mt-4 flex items-center justify-between border-t border-border pt-4">
         <div className="text-xs text-muted-foreground">
-          {order.tracking ? (
+          {order.tracking.length > 0 ? (
             <>
-              Tracking:{" "}
-              <CopyableText text={order.tracking} />
+              {t("Tracking updates")}: {order.tracking.length}
             </>
           ) : (
             t("No tracking number")

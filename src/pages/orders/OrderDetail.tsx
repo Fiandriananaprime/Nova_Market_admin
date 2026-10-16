@@ -8,8 +8,6 @@ import {
   User,
   Store,
   ChevronRight,
-  Copy,
-  Check,
   Clock,
   FileText,
   ArrowLeft
@@ -23,11 +21,13 @@ import type {
 import { formatPrice, formatDate } from '@/hook/format';
 import TableCard, { Column } from '@/components/Stats/TableCard';
 import { useTranslation } from 'react-i18next';
-import { getOrderDetailsById } from '@/api/admin/order.api';
+import { getOrderDetailsById, getOrderTracking } from '@/api/admin/order.api';
 import { useToast } from '@/contexts/ToastContext';
 import { getApiErrorMessage } from '@/api/errorMessage';
 import NotFound from '@/pages/NotFound';
 import { Badge, PaymentBadge } from '@/components/ui';
+import type { DeliveryTracking } from '@/type/order/order';
+import { OrderTrackingMap } from './OrderTrackingMap';
 
 type Tab = 'summary' | 'tracking';
 
@@ -39,8 +39,9 @@ export default function OrderReceipt() {
   const { t } = useTranslation();
   const  { id } = useParams();
   const [activeTab, setActiveTab] = useState<Tab>('summary');
-  const [copied, setCopied] = useState(false);
   const [loading, setLoading] = useState(true)
+  const [liveTracking, setLiveTracking] = useState<DeliveryTracking | null>(null);
+  const [trackingLoading, setTrackingLoading] = useState(false);
   useEffect(() => {
     const fetchOrderDetails = async () => {
         if(!id) {
@@ -60,6 +61,44 @@ export default function OrderReceipt() {
     }
     fetchOrderDetails()
   },[])
+
+  useEffect(() => {
+    if (activeTab !== 'tracking' || !id) return;
+    let active = true;
+    let requestPending = false;
+    let initialRequest = true;
+    let trackingErrorNotified = false;
+    const loadTracking = async () => {
+      if (requestPending) return;
+      requestPending = true;
+      const showLoading = initialRequest;
+      initialRequest = false;
+      if (showLoading) setTrackingLoading(true);
+
+      try {
+        const data = await getOrderTracking(id);
+        if (active) {
+          setLiveTracking(data);
+          trackingErrorNotified = false;
+        }
+      } catch (error) {
+        if (active && !trackingErrorNotified) {
+          toast(getApiErrorMessage(error, 'Unable to load live delivery tracking.'), 'error');
+          trackingErrorNotified = true;
+        }
+      } finally {
+        requestPending = false;
+        if (active && showLoading) setTrackingLoading(false);
+      }
+    };
+
+    void loadTracking();
+    const interval = window.setInterval(() => void loadTracking(), 10_000);
+    return () => {
+      active = false;
+      window.clearInterval(interval);
+    };
+  }, [activeTab, id, toast]);
 
   const itemsBySeller = useMemo(() => {
     if (!order) return {};
@@ -83,17 +122,6 @@ export default function OrderReceipt() {
     return order?.sellers.find((seller) => seller.id === sellerId);
   };
 
-  const handleCopyTracking = async () => {
-    if (!order?.tracking) return;
-
-    await navigator.clipboard.writeText(order.tracking);
-
-    setCopied(true);
-
-    setTimeout(() => {
-      setCopied(false);
-    }, 2000);
-  };
   if (loading) {
     return (
         <div className="flex min-h-[50vh] items-center justify-center">
@@ -229,12 +257,14 @@ export default function OrderReceipt() {
                 <p>{order.address.id}</p>
                 <p>{order.address.phone}</p>
                 <p>
-                  {order.address.city}, {order.address.city}
+                  {[
+                    order.address.street,
+                    order.address.district,
+                    order.address.city,
+                    order.address.region,
+                    order.address.postalCode,
+                  ].filter(Boolean).join(', ')}
                 </p>
-
-                {order.address.fullAddress && (
-                  <p>{order.address.fullAddress}</p>
-                )}
               </div>
 
               <div className="mt-4 flex items-center justify-between border-t border-gray-100 pt-4">
@@ -432,7 +462,7 @@ export default function OrderReceipt() {
                 </span>
 
                 <span className="font-medium text-secondary-foreground">
-                  {formatPrice(order.shippingFee)}
+                  {formatPrice(order.deliveryFee)}
                 </span>
               </div>
 
@@ -470,7 +500,7 @@ export default function OrderReceipt() {
 
       {activeTab === 'tracking' && (
         <div className="p-6">
-          <div className="mx-auto max-w-3xl">
+          <div className="mx-auto w-full">
             <div className="mb-8 flex items-center gap-3">
               <div className="flex h-11 w-11 items-center justify-center rounded-full bg-gray-100">
                 <Truck className="h-5 w-5 text-gray-600" />
@@ -487,38 +517,37 @@ export default function OrderReceipt() {
               </div>
             </div>
 
+            <OrderTrackingMap
+              orderId={order.id}
+              points={liveTracking?.history?.length ? liveTracking.history : order.tracking}
+              currentLocation={liveTracking?.currentLocation}
+              destination={order.address}
+              status={liveTracking?.status ?? order.status}
+              loading={trackingLoading}
+            />
+
             <div className="rounded-xl border border-gray-200 p-5">
               <p className="text-xs font-medium uppercase tracking-wide text-secondary-foreground">
-                {t('Tracking number')}
+                {t('Delivery tracking')}
               </p>
 
-              {order.tracking ? (
-                <div className="mt-3 flex flex-col gap-3 sm:flex-row sm:items-center">
-                  <div className="flex-1 rounded-lg bg-gray-50 px-4 py-3 font-mono text-sm text-secondary-foreground">
-                    {order.tracking}
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleCopyTracking}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-gray-200 px-4 py-3 text-sm font-medium text-secondary-foreground transition hover:bg-gray-50"
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="h-4 w-4" />
-                        {t('Copied')}
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-4 w-4" />
-                        {t('Copy')}
-                      </>
-                    )}
-                  </button>
-                </div>
+              {(liveTracking?.history?.length ? liveTracking.history : order.tracking).length > 0 ? (
+                <ol className="mt-3 space-y-3">
+                  {(liveTracking?.history?.length ? liveTracking.history : order.tracking).map((point, index) => (
+                    <li
+                      key={point.id ?? `${point.timestamp}-${index}`}
+                      className="rounded-lg bg-gray-50 px-4 py-3 text-sm text-secondary-foreground"
+                    >
+                      <div>{point.latitude}, {point.longitude}</div>
+                      <time className="text-xs text-muted-foreground">
+                        {formatDate(point.timestamp)}
+                      </time>
+                    </li>
+                  ))}
+                </ol>
               ) : (
                 <p className="mt-3 text-sm text-secondary-foreground">
-                  {t('No tracking number has been assigned yet.')}
+                  {t('No tracking updates yet.')}
                 </p>
               )}
             </div>
@@ -574,9 +603,14 @@ export default function OrderReceipt() {
 
                   <div className="mt-2 text-sm leading-6 text-secondary-foreground">
                     <p>{order.address.id}</p>
-                    <p>{order.address.city}</p>
                     <p>
-                      {order.address.city}, {order.address.fullAddress}
+                      {[
+                        order.address.street,
+                        order.address.district,
+                        order.address.city,
+                        order.address.region,
+                        order.address.postalCode,
+                      ].filter(Boolean).join(', ')}
                     </p>
 
                     {order.address.phone && (

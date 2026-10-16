@@ -109,15 +109,15 @@ export default function AdminProducts() {
       ),
     },
     {
-      key: 'sellerName',
+      key: 'storeName',
       header: t("SELLER"),
       render: (p) => (
         <Link
           className="text-muted-foreground hover:underline"
-          to={`/admin/seller/${p.sellerId}`}
+          to={`/admin/stores/${p.storeId}`}
           onClick={(e) => e.stopPropagation()}
         >
-          {p.sellerName || t('Unknown seller')}
+          {p.storeName || t('Unknown seller')}
         </Link>
       ),
     },
@@ -146,7 +146,10 @@ export default function AdminProducts() {
     {
       key: 'status',
       header: filterHeader(t("STATUS")),
-      render: (p) => <StatusBadge status={p.status} />,
+      render: (p) => {
+        const status = p.moderationStatus ?? p.status;
+        return status ? <StatusBadge status={status} /> : null;
+      },
     },
     {
       key: 'submittedAt',

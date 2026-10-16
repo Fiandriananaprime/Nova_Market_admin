@@ -103,6 +103,8 @@ export default function UserDetails() {
     );
   }
 
+  const fullName = `${user.firstName} ${user.lastName}`.trim();
+
   return (
     <div className="space-y-5">
 
@@ -125,7 +127,7 @@ export default function UserDetails() {
             {user.avatarUrl ? (
               <img
                 src={user.avatarUrl}
-                alt={user.name}
+                alt={fullName}
                 className="w-16 h-16 rounded-full object-cover"
               />
             ) : (
@@ -145,7 +147,7 @@ export default function UserDetails() {
 
             <div>
               <h1 className="text-xl font-bold font-display text-secondary-foreground">
-                {user.name}
+                {fullName}
               </h1>
 
               <p className="text-sm text-muted-foreground">
@@ -258,21 +260,23 @@ export default function UserDetails() {
 
           <div className="p-5 space-y-5">
 
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                <ShoppingBag className="w-5 h-5 text-primary" />
-              </div>
+            {user.role === 'buyer' && (
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                  <ShoppingBag className="w-5 h-5 text-primary" />
+                </div>
 
-              <div>
-                <p className="text-xs text-muted-foreground">
-                  {t("Orders")}
-                </p>
+                <div>
+                  <p className="text-xs text-muted-foreground">
+                    {t("Orders")}
+                  </p>
 
-                <p className="font-semibold text-secondary-foreground">
-                  {user.ordersCount}
-                </p>
+                  <p className="font-semibold text-secondary-foreground">
+                    {user.ordersCount ?? 0}
+                  </p>
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
@@ -285,7 +289,7 @@ export default function UserDetails() {
                 </p>
 
                 <p className="font-semibold text-secondary-foreground">
-                  {formatDate(user.joinedAt)}
+                  {formatDate(user.createdAt)}
                 </p>
               </div>
             </div>
@@ -300,7 +304,7 @@ export default function UserDetails() {
             <h2 className="font-semibold font-display text-secondary-foreground">Stores</h2>
           </div>
           <div className="divide-y divide-border">
-            {user.stores.map((store) => (
+            {(user.stores ?? []).map((store) => (
               <Link
                 key={store.id}
                 to={`/admin/stores/${store.id}`}
@@ -334,7 +338,7 @@ export default function UserDetails() {
           </h2>
         </div>
 
-        {user.addresses?.length > 0 ? (
+        {user.addresses?.length ? (
           <div className="divide-y divide-border">
             {user.addresses.map((address) => (
               <div
@@ -350,7 +354,7 @@ export default function UserDetails() {
                   <div>
                     <div className="flex items-center gap-2">
                       <p className="font-medium text-secondary-foreground">
-                        {address.label}
+                        {address.label || address.recipientName}
                       </p>
 
                       {address.isDefault && (
@@ -361,11 +365,11 @@ export default function UserDetails() {
                     </div>
 
                     <p className="text-sm text-muted-foreground mt-1">
-                      {address.fullAddress}
+                      {[address.street, address.district].filter(Boolean).join(', ')}
                     </p>
 
                     <p className="text-sm text-muted-foreground">
-                      {address.city}
+                      {[address.city, address.region, address.postalCode].filter(Boolean).join(', ')}
                     </p>
 
                     {address.phone && (

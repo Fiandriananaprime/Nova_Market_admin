@@ -29,7 +29,9 @@ export default function AdminUsers() {
     {
       key: 'name',
       header: t("User"),
-      render: (user) => (
+      render: (user) => {
+        const fullName = `${user.firstName} ${user.lastName}`.trim();
+        return (
         <div className="flex items-center gap-2.5">
           <div
             className="w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-bold flex-shrink-0"
@@ -45,19 +47,20 @@ export default function AdminUsers() {
             {user.avatarUrl ? (
               <img
                 src={user.avatarUrl}
-                alt={user.name}
+                alt={fullName}
                 className="w-full h-full object-cover rounded-full"
               />
             ) : (
-              user.name[0]
+              fullName[0]
             )}
           </div>
 
           <span className="font-medium text-secondary-foreground">
-            {user.name}
+            {fullName}
           </span>
         </div>
-      ),
+        );
+      },
     },
 
     {
@@ -102,7 +105,7 @@ export default function AdminUsers() {
       key: 'ordersCount',
       header: t("Orders"),
       className: 'text-secondary-foreground',
-      render: (user) => String(user.ordersCount ?? 0),
+      render: (user) => user.role === 'buyer' ? String(user.ordersCount ?? 0) : '—',
     },
 
     {
@@ -277,4 +280,3 @@ export default function AdminUsers() {
     </div>
   );
 }
-
