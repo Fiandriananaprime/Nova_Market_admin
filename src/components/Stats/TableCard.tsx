@@ -34,10 +34,10 @@ interface AdminTableCardProps<T> {
   const navigate = useNavigate();
   return (
     <div
-      className={`bg-card border border-border rounded-xl overflow-visible ${className}`}
+      className={`${headerOverflowVisible ? 'overflow-visible' : 'overflow-hidden'} rounded-2xl border border-border bg-card shadow-sm transition-shadow duration-200 hover:shadow-md ${className}`}
     >
       {/* Header */}
-      <div className="px-5 py-4 border-b border-border flex items-center justify-between">
+      <div className="flex items-center justify-between border-b border-border px-5 py-4">
         <h2 className="font-semibold font-display text-secondary-foreground">
           {title}
         </h2>
@@ -58,7 +58,7 @@ interface AdminTableCardProps<T> {
       <div className={headerOverflowVisible ? 'overflow-visible' : 'overflow-x-auto'}>
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b border-border bg-secondary">
+            <tr className="border-b border-border bg-secondary/65">
               {columns.map((column) => (
                 <th
                   key={column.key}
@@ -81,7 +81,14 @@ interface AdminTableCardProps<T> {
                   }
                 }}
                 key={rowKey(item, index)}
-                className={`hover:bg-secondary transition-colors ${rowHref ? 'cursor-pointer' : ''}`}
+                tabIndex={rowHref ? 0 : undefined}
+                onKeyDown={(event) => {
+                  if (rowHref && (event.key === 'Enter' || event.key === ' ')) {
+                    event.preventDefault();
+                    navigate(rowHref(item));
+                  }
+                }}
+                className={`transition-colors hover:bg-primary/[.035] focus-visible:bg-primary/[.04] focus-visible:outline-none ${rowHref ? 'cursor-pointer' : ''}`}
               >
                 {columns.map((column) => (
                   <td

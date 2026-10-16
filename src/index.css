@@ -25,44 +25,44 @@ html {
 }
 
 :root {
-  --background: #F5EFFF;
-  --foreground: #16262E;
+  --background: #f3f6f5;
+  --foreground: #172b2a;
   --card: #ffffff;
   --card-foreground: #16262E;
-  --primary: #0077B6;
+  --primary: #147d76;
   --primary-foreground: #ffffff;
-  --secondary: #EBE8F0;
-  --secondary-foreground: #16262E;
-  --muted: #EBE8F0;
-  --muted-foreground: #5d6d75;
-  --accent: #5ABCB9;
-  --accent-foreground: #ffffff;
-  --border: #D0CCD0;
-  --ring: #0077B6;
+  --secondary: #e9efed;
+  --secondary-foreground: #172b2a;
+  --muted: #e9efed;
+  --muted-foreground: #5d716e;
+  --accent: #e5a84b;
+  --accent-foreground: #172b2a;
+  --border: #d8e1de;
+  --ring: #147d76;
   --radius: 10px;
 
-  --navy: #16262E;
-  --turquoise: #5ABCB9;
-  --blue: #0077B6;
-  --lavender: #F5EFFF;
-  --gray: #D0CCD0;
+  --navy: #123b3d;
+  --turquoise: #54b8a8;
+  --blue: #147d76;
+  --lavender: #f3f6f5;
+  --gray: #d8e1de;
 }
 
 .dark {
-  --background: #0f1e25;
-  --foreground: #16262E;
-  --card: #16262E;
-  --card-foreground: #16262E;
-  --primary: #0077B6;
+  --background: #101c1d;
+  --foreground: #e5efec;
+  --card: #182827;
+  --card-foreground: #e5efec;
+  --primary: #147d76;
   --primary-foreground: #ffffff;
-  --secondary: #1e3540;
-  --secondary-foreground: #ffffff;
-  --muted: #1e3540;
-  --muted-foreground: #8da8b5;
-  --accent: #5ABCB9;
-  --accent-foreground: #16262E;
-  --border: #2a4555;
-  --ring: #5ABCB9;
+  --secondary: #233533;
+  --secondary-foreground: #e5efec;
+  --muted: #233533;
+  --muted-foreground: #a2b5b0;
+  --accent: #e5a84b;
+  --accent-foreground: #172b2a;
+  --border: #304440;
+  --ring: #52b5a7;
 }
 
 html, body, #root {
@@ -94,6 +94,13 @@ body {
   color: var(--foreground);
   -webkit-font-smoothing: antialiased;
 }
+
+::selection { background: color-mix(in srgb, var(--primary) 22%, transparent); }
+button, a, input, select, textarea { -webkit-tap-highlight-color: transparent; }
+button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible, textarea:focus-visible { outline: 2px solid var(--ring); outline-offset: 2px; }
+.animate-page-in { animation: page-in 280ms cubic-bezier(.2,.75,.25,1) both; }
+@keyframes page-in { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; } }
 
 h1, h2, h3, h4, h5, h6 {
   font-family: 'Manrope', system-ui, sans-serif;

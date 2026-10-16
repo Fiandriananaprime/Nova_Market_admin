@@ -28,7 +28,6 @@ interface ProductDetailsProps {
   onEdit?: () => void;
   onApprove?: () => void;
   onReject?: () => void;
-  onDisable?: () => void;
   onPrevious?: () => void;
   onNext?: () => void;
   canGoPrevious?: boolean;
@@ -43,7 +42,6 @@ export default function ProductDetails({
   onEdit,
   onApprove,
   onReject,
-  onDisable,
   onPrevious,
   onNext,
   canGoPrevious = false,
@@ -51,11 +49,8 @@ export default function ProductDetails({
 }: ProductDetailsProps) {
   const { t } = useTranslation();
   const images =
-    product.images?.length > 0
-      ? product.images
-      : product.image
-        ? [product.image]
-        : [];
+    product.images?.map((image) => image.url) ?? [];
+  const displayStatus = product.moderationStatus ?? product.status;
 
   const [selectedImage, setSelectedImage] = useState(0);
 
@@ -208,7 +203,7 @@ export default function ProductDetails({
           {/* Product information */}
           <div className="flex flex-col">
             <div className="mb-4 flex flex-wrap items-center gap-2">
-              <StatusBadge status={product.status} />
+              {displayStatus && <StatusBadge status={displayStatus} />}
 
               {product.brand && (
                 <span className="rounded-full bg-muted px-3 py-1 text-xs font-medium">
@@ -227,12 +222,6 @@ export default function ProductDetails({
               {product.name}
             </h2>
 
-            {product.nameF && product.nameF !== product.name && (
-              <p className="mt-1 text-sm text-muted-foreground">
-                {product.nameF}
-              </p>
-            )}
-
             {/* Rating */}
             <div className="mt-4 flex items-center gap-3">
               <div className="flex items-center gap-1">
@@ -242,12 +231,12 @@ export default function ProductDetails({
                 />
 
                 <span className="font-semibold">
-                  {product.rating.toFixed(1)}
+                  {product.rating?.toFixed(1) ?? '—'}
                 </span>
               </div>
 
               <span className="text-sm text-muted-foreground">
-                {product.reviewsCount} {t("reviews")}
+                {product.reviewsCount ?? 0} {t("reviews")}
               </span>
             </div>
 
@@ -257,18 +246,6 @@ export default function ProductDetails({
                 {formatPrice(product.price)}
               </span>
 
-              {product.originalPrice &&
-                product.originalPrice > product.price && (
-                  <>
-                    <span className="pb-1 text-lg text-muted-foreground line-through">
-                      {formatPrice(product.originalPrice)}
-                    </span>
-
-                    <span className="mb-1 rounded-md bg-green-100 px-2 py-1 text-xs font-semibold text-green-700">
-                      -{product.discount}%
-                    </span>
-                  </>
-                )}
             </div>
 
             {/* Basic info */}
@@ -281,28 +258,18 @@ export default function ProductDetails({
               />
 
               <InfoItem
-                label={t("Weight")}
-                value={`${product.weightGrams} g`}
-              />
-
-              <InfoItem
-                label={t("Dimensions")}
-                value={product.dimensions || 'N/A'}
-              />
-
-              <InfoItem
                 label={t("Category")}
-                value={product.categoryName}
+                value={product.categoryName ?? 'N/A'}
               />
 
               <InfoItem
                 label={t("Created")}
-                value={formatDate(product.createdAt)}
+                value={product.createdAt ? formatDate(product.createdAt) : 'N/A'}
               />
             </div>
 
             {/* Tags */}
-            {product.tags?.length > 0 && (
+            {(product.tags ?? []).length > 0 && (
               <div className="mt-5">
                 <div className="mb-2 flex items-center gap-2 text-sm font-semibold">
                   <Tag size={15} />
@@ -310,7 +277,7 @@ export default function ProductDetails({
                 </div>
 
                 <div className="flex flex-wrap gap-2">
-                  {product.tags.map((tag) => (
+                  {(product.tags ?? []).map((tag) => (
                     <span
                       key={tag}
                       className="rounded-md bg-muted px-2.5 py-1 text-xs text-muted-foreground"
@@ -323,7 +290,7 @@ export default function ProductDetails({
             )}
 
             {/* Moderation */}
-            {(product.status === 'pending' || product.status ==='active') && (
+            {product.moderationStatus === 'pending' && (
               <div className="mt-7 flex flex-wrap gap-3">
                 {onApprove && (
                   <button
@@ -345,14 +312,6 @@ export default function ProductDetails({
                   </button>
                 )}
 
-                {onDisable && (
-                  <button
-                    onClick={onDisable}
-                    className="flex items-center gap-2 rounded-lg border border-border px-4 py-2.5 text-sm font-medium transition hover:bg-muted"
-                  >
-                    {t("Disable")}
-                  </button>
-                )}
               </div>
             )}
           </div>
@@ -376,7 +335,7 @@ export default function ProductDetails({
 
           {Object.keys(product.specs ?? {}).length > 0 ? (
             <div className="mt-4 overflow-hidden rounded-lg border border-border">
-              {Object.entries(product.specs).map(
+              {Object.entries(product.specs ?? {}).map(
                 ([key, value], index) => (
                   <div
                     key={key}
@@ -400,12 +359,12 @@ export default function ProductDetails({
       </div>
 
       {/* Variants */}
-      {product.variants?.length > 0 && (
+      {(product.variants ?? []).length > 0 && (
         <section className="mt-6 rounded-xl border border-border bg-card p-6">
           <SectionTitle title={t("Variants")} />
 
           <div className="mt-5 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {product.variants.map((variant) => (
+            {(product.variants ?? []).map((variant) => (
               <div
                 key={variant.name}
                 className="rounded-lg border border-border p-4"
@@ -437,9 +396,9 @@ export default function ProductDetails({
         <div className="mt-5 flex flex-col gap-6 md:flex-row md:items-center">
           <div className="flex items-center gap-4">
             <div className="h-16 w-16 overflow-hidden rounded-full border border-border bg-muted">
-              {seller?.logo ? (
+              {seller?.logoUrl ? (
                 <img
-                  src={seller.logo}
+                  src={seller.logoUrl}
                   alt={seller.name}
                   className="h-full w-full object-cover"
                 />
@@ -453,7 +412,7 @@ export default function ProductDetails({
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold">
-                  {seller?.name ?? product.sellerName}
+                  {seller?.name ?? product.storeName ?? t('Unknown seller')}
                 </h3>
 
                 {seller?.verified && (
@@ -489,7 +448,7 @@ export default function ProductDetails({
 
               <InfoItem
                 label={t("Joined")}
-                value={seller.joinedYear.toString()}
+                value={seller.joinedYear}
               />
             </div>
           )}
@@ -514,7 +473,7 @@ export default function ProductDetails({
             />
 
             <span className="font-semibold">
-              {product.rating.toFixed(1)}
+              {product.rating?.toFixed(1) ?? 'N/A'}
             </span>
 
             <span className="text-sm text-muted-foreground">
@@ -601,7 +560,7 @@ export default function ProductDetails({
           <MetadataItem
             icon={<UserRound size={17} />}
             label={t("Seller ID")}
-            value={product.sellerId}
+            value={product.storeId}
           />
 
           <MetadataItem
@@ -613,7 +572,7 @@ export default function ProductDetails({
           <MetadataItem
             icon={<Calendar size={17} />}
             label={t("Created")}
-            value={formatDate(product.createdAt)}
+            value={product.createdAt ? formatDate(product.createdAt) : 'N/A'}
           />
         </div>
       </section>
@@ -674,4 +633,3 @@ const EmptyState = ({ text }: { text: string }) => {
     </div>
   );
 };
-

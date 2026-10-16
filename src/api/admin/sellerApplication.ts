@@ -1,5 +1,9 @@
 import { api } from "../axios";
-import { SellerApplication, SellerApplicationResponse, SellerApplicationStatus } from "@/type/admin/seller";
+import {
+  SellerApplication,
+  SellerApplicationListResponse,
+  SellerApplicationStatus,
+} from "@/type/admin/seller";
 
 type SellerApplicationQueryParams = {
   page?: number;
@@ -9,10 +13,10 @@ type SellerApplicationQueryParams = {
 };
 
 type UpdateSellerApplicationStatusParams = {
-  action: 'approve' | 'reject';
+  action: 'approved' | 'rejected';
   reason?: string;
 };
-export const getSellerApplications = async (params: SellerApplicationQueryParams): Promise<SellerApplicationResponse> => {
+export const getSellerApplications = async (params: SellerApplicationQueryParams): Promise<SellerApplicationListResponse> => {
     const response = await api.get("/admin/sellers/applications", { params });
     return response.data;
 }

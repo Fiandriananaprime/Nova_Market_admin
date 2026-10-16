@@ -1,6 +1,7 @@
 
 export type paymentMethod = 'mvola' | 'orange_money' | 'card' | 'cod';
 export type PaymentStatus = 'pending' | 'paid' | 'failed' | 'refunded';
+export type TransactionStatus = 'completed' | 'pending' | 'failed' | 'refunded';
 
 export interface Transaction {
     id: string,
@@ -10,7 +11,7 @@ export interface Transaction {
     amount: number,
     method: paymentMethod,
     commission: number,
-    status: PaymentStatus,
+    status: TransactionStatus,
     date: string
 }
 
@@ -29,8 +30,8 @@ export interface PaymentsSummary {
 
 export interface Promotion {
     id:string,
-    sellerId:string,
-    sellerName:string,
+    storeId:string,
+    storeName:string,
     name:string,
     type: PromotionType,
     discount:number,
@@ -38,7 +39,13 @@ export interface Promotion {
     productsCount: number,
     startDate:string,
     endDate:string,
-    status: PromotionStatus
+    status: PromotionStatus,
+    code?: string | null,
+    minimumOrderAmount?: number | null,
+    maximumDiscount?: number | null,
+    usageLimit?: number | null,
+    usedCount?: number,
+    isAutomatic?: boolean,
 }
 
 export type PromotionStatus = 'active' | 'scheduled' | 'inactive' | 'expired'

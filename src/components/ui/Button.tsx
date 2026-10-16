@@ -25,7 +25,7 @@ export function Button({
     outline: 'border border-border bg-transparent text-secondary-foreground hover:bg-secondary',
     ghost: 'bg-transparent text-secondary-foreground hover:bg-secondary',
     danger: 'bg-red-600 text-white hover:bg-red-700',
-    accent: 'bg-accent text-white hover:bg-[#4aa8a5]',
+    accent: 'bg-accent text-accent-foreground hover:brightness-95',
   };
 
   const sizes = {

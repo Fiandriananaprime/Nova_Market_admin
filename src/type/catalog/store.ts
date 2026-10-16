@@ -2,16 +2,24 @@ export interface Store {
   id: string;
   userId: string;
   name: string;
-  logo: string;
-  cover: string;
+  slug?: string;
+  logoUrl: string | null;
+  coverUrl: string | null;
   verified: boolean;
   rating: number;
+  reviewsCount: number;
   productsCount: number;
-  productIds: string[];
-  location: string;
-  joinedYear: number;
+  location: string | null;
+  joinedYear: string;
   followersCount: number;
-  description: string;
+  description: string | null;
+  isOpen?: boolean;
+  isFollowedByCurrentUser?: boolean;
+  contact?: {
+    phone?: string | null;
+    email?: string | null;
+    website?: string | null;
+  };
 }
 
 

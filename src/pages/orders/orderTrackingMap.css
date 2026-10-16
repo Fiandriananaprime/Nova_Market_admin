@@ -1,0 +1,11 @@
+@import 'leaflet/dist/leaflet.css';
+
+.admin-order-leaflet-map {
+  width: 100%;
+  height: 100%;
+  background-color: #f1f5f9;
+}
+
+.dark .admin-order-leaflet-map .leaflet-tile-pane {
+  filter: brightness(0.7) invert(1) contrast(1.15) hue-rotate(190deg) saturate(0.5);
+}

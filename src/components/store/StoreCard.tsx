@@ -25,6 +25,7 @@ const statusStyles: Record<OrderStatus, string> = {
     shipped: 'bg-purple-500/10 text-purple-600',
     delivered: 'bg-emerald-500/10 text-emerald-600',
     cancelled: 'bg-red-500/10 text-red-600',
+    refunded: 'bg-slate-500/10 text-slate-600',
 };
 
 
@@ -39,6 +40,7 @@ const StoreCard = ({ store }: StoreCardProps) => {
         shipped: t('Shipped'),
         delivered: t('Delivered'),
         cancelled: t('Cancelled'),
+        refunded: t('Refunded'),
     };
     const orders = store.orders ?? [];
     const navigate = useNavigate();

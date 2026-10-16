@@ -222,9 +222,27 @@ components:
         instructions: {type: string, nullable: true}
         isDefault: {type: boolean, default: false}
 
+    AddressUpdateRequest:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        label: {type: string, minLength: 1, maxLength: 100}
+        recipientName: {type: string, minLength: 1, maxLength: 200}
+        phone: {type: string, minLength: 1, maxLength: 30}
+        street: {type: string, minLength: 1}
+        district: {type: string, minLength: 1, maxLength: 150}
+        city: {type: string, minLength: 1, maxLength: 150}
+        region: {type: string, minLength: 1, maxLength: 150}
+        postalCode: {type: string, minLength: 1, maxLength: 20, nullable: true}
+        latitude: {type: number, minimum: -90, maximum: 90, nullable: true}
+        longitude: {type: number, minimum: -180, maximum: 180, nullable: true}
+        instructions: {type: string}
+        isDefault: {type: boolean}
+
     User:
       type: object
-      required: [id, firstName, lastName, email, role, status]
+      required: [id, firstName, lastName, email, role, status, createdAt]
       properties:
         id: {type: string, format: uuid}
         firstName: {type: string, example: Rakoto}
@@ -239,9 +257,14 @@ components:
         createdAt: {type: string, format: date-time}
         updatedAt: {type: string, format: date-time}
         lastLoginAt: {type: string, format: date-time, nullable: true}
+        ordersCount: {type: integer, nullable: true, description: Buyer order count; returned for buyer accounts.}
         addresses:
           type: array
           items: {$ref: '#/components/schemas/Address'}
+        stores:
+          type: array
+          description: Stores owned by the user; returned for seller accounts.
+          items: {$ref: '#/components/schemas/AdminStore'}
 
     ProfileUpdateRequest:
       type: object
@@ -335,6 +358,14 @@ components:
         secret: {type: string}
         otpauthUrl: {type: string}
         qrCodeUrl: {type: string}
+
+    TwoFactorUpdateRequest:
+      type: object
+      required: [enabled, code]
+      additionalProperties: false
+      properties:
+        enabled: {type: boolean, enum: [false]}
+        code: {type: string, pattern: '^[0-9]{6}$'}
 
     RecoveryCodes:
       type: object
@@ -438,6 +469,7 @@ components:
           type: array
           items:
             type: object
+            required: [url]
             properties:
               url:
                 type: string
@@ -454,13 +486,22 @@ components:
           type: array
           items: {$ref: '#/components/schemas/ProductVariant'}
         status:
-          type: string
-          enum: [draft, pending, approved, rejected]
+          $ref: '#/components/schemas/ProductStatus'
+        moderationStatus:
+          $ref: '#/components/schemas/ProductModerationStatus'
         createdAt: {type: string, format: date-time}
         updatedAt: {type: string, format: date-time}
         views: {type: integer, default: 0}
         soldCount: {type: integer, default: 0}
         wishlistCount: {type: integer, default: 0}
+
+    ProductModerationStatus:
+      type: string
+      enum: [draft, pending, approved, rejected]
+
+    ProductStatus:
+      type: string
+      enum: [active, inactive]
 
     ProductInput:
       type: object
@@ -631,6 +672,15 @@ components:
         phone: {type: string, nullable: true}
         isDefault: {type: boolean, default: false}
 
+    PatchPaymentMethodRequest:
+      type: object
+      minProperties: 1
+      additionalProperties: false
+      properties:
+        label: {type: string, nullable: true}
+        phone: {type: string, nullable: true}
+        isDefault: {type: boolean}
+
     CartItem:
       type: object
       properties:
@@ -714,7 +764,7 @@ components:
         tracking:
           type: array
           items: {$ref: '#/components/schemas/TrackingPoint'}
-        estimatedDelivery: {type: string, format: date-time, nullable: true}
+        estimatedDelivery: {type: string, format: date-time}
         note: {type: string, nullable: true}
         createdAt: {type: string, format: date-time}
         updatedAt: {type: string, format: date-time}
@@ -759,7 +809,10 @@ components:
 
     SellerApplication:
       type: object
+      required: [id, applicantUserId, status]
       properties:
+        id: {type: string, format: uuid}
+        applicantUserId: {type: string, format: uuid}
         status:
           type: string
           enum:
@@ -960,6 +1013,7 @@ components:
       properties:
         id: {type: string, format: uuid}
         storeId: {type: string, format: uuid}
+        storeName: {type: string}
         name: {type: string}
         type: {type: string, enum: [percentage, fixed]}
         discount: {type: number}
@@ -1056,6 +1110,53 @@ components:
               unitsSold: {type: integer}
               revenue: {type: number}
 
+    AdminStore:
+      type: object
+      properties:
+        id: {type: string, format: uuid}
+        userId: {type: string, format: uuid}
+        name: {type: string}
+        logo: {type: string, nullable: true}
+        cover: {type: string, nullable: true}
+        verified: {type: boolean}
+        rating: {type: number, minimum: 0, maximum: 5}
+        productsCount: {type: integer}
+        productIds:
+          type: array
+          items: {type: string, format: uuid}
+        location: {type: string}
+        joinedYear: {type: integer}
+        followersCount: {type: integer}
+        description: {type: string}
+        owner:
+          type: object
+          nullable: true
+          properties:
+            id: {type: string, format: uuid}
+            name: {type: string}
+            firstName: {type: string}
+            lastName: {type: string}
+            email: {type: string, format: email}
+            phone: {type: string, nullable: true}
+            status: {type: string, enum: [active, suspended]}
+            avatarUrl: {type: string, nullable: true}
+            storesCount: {type: integer}
+        reviewsCount: {type: integer}
+        annualRevenue: {type: number}
+        orders:
+          type: array
+          items:
+            type: object
+            properties:
+              id: {type: string}
+              buyerId: {type: string, format: uuid}
+              buyerName: {type: string}
+              total: {type: number}
+              storeTotal: {type: number}
+              itemsCount: {type: integer}
+              status: {$ref: '#/components/schemas/OrderStatus'}
+              createdAt: {type: string, format: date-time}
+
     AdminTopSeller:
       type: object
       properties:
@@ -1151,6 +1252,17 @@ components:
       properties:
         productId: {type: string, format: uuid}
         isFavorite: {type: boolean}
+    FavoriteProduct:
+      type: object
+      required: [id, name, rating, reviewCount, storeName, storeId, image]
+      properties:
+        id: {type: string, format: uuid}
+        name: {type: string}
+        rating: {type: number, minimum: 0, maximum: 5}
+        reviewCount: {type: integer, minimum: 0}
+        storeName: {type: string}
+        storeId: {type: string, format: uuid}
+        image: {type: string, description: URL of the product image marked as default}
     TrackingPoint:
       type: object
       required:
@@ -1665,6 +1777,47 @@ components:
           type: integer
         pendingProductModeration:
           type: integer
+        totalRevenue:
+          type: number
+        totalOrders:
+          type: integer
+        totalBuyers:
+          type: integer
+        totalSellers:
+          type: integer
+        revenueSeries:
+          type: array
+          items:
+            type: object
+            properties:
+              month: {type: string}
+              revenue: {type: number}
+              sellers: {type: integer}
+              buyers: {type: integer}
+        orderSeries:
+          type: array
+          items:
+            type: object
+            properties:
+              day: {type: string, format: date}
+              orders: {type: integer}
+              sellers: {type: integer}
+              buyers: {type: integer}
+        topSellers:
+          type: array
+          items:
+            type: object
+            properties:
+              sellerId: {type: string, format: uuid}
+              sellerName: {type: string}
+              revenue: {type: number}
+        topCategories:
+          type: array
+          items:
+            type: object
+            properties:
+              name: {type: string}
+              percentage: {type: number}
     AuthRefreshResponse:
       type: object
       properties:
@@ -1943,15 +2096,15 @@ paths:
       parameters:
       - $ref: '#/components/parameters/CsrfHeader'
 
-  /account/2fa/disable:
-    post:
+  /account/2fa:
+    patch:
       tags: [Account]
       summary: Disable 2FA
       requestBody:
         required: true
         content:
           application/json:
-            schema: {$ref: '#/components/schemas/VerificationCodeRequest'}
+            schema: {$ref: '#/components/schemas/TwoFactorUpdateRequest'}
       responses:
         '204': {description: 2FA disabled}
       x-csrf-required: true
@@ -2080,29 +2233,45 @@ paths:
                     type: array
                     items: {$ref: '#/components/schemas/Notification'}
                   meta: {$ref: '#/components/schemas/PaginationMeta'}
-
-  /account/notifications/{id}/read:
     patch:
       tags: [Account]
-      summary: Mark notification as read
+      summary: Mark all current account notifications as read
       parameters:
-      - {$ref: '#/components/parameters/IdParam'}
       - $ref: '#/components/parameters/CsrfHeader'
-      responses:
-        '204': {description: Notification marked as read}
-      x-csrf-required: true
-
-  /account/notifications/read-all:
-    post:
-      tags: [Account]
-      summary: Mark all notifications as read
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [read]
+              additionalProperties: false
+              properties:
+                read: {type: boolean, enum: [true]}
       responses:
         '204': {description: Notifications marked as read}
       x-csrf-required: true
-      parameters:
-      - $ref: '#/components/parameters/CsrfHeader'
 
   /account/notifications/{id}:
+    patch:
+      tags: [Account]
+      summary: Mark a notification as read
+      parameters:
+      - {$ref: '#/components/parameters/IdParam'}
+      - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [read]
+              additionalProperties: false
+              properties:
+                read: {type: boolean, enum: [true]}
+      responses:
+        '204': {description: Notification marked as read}
+      x-csrf-required: true
     delete:
       tags: [Account]
       summary: Delete notification
@@ -2485,26 +2654,6 @@ paths:
                     type: object
                     additionalProperties: {type: integer}
 
-  /stores/{id}/follow:
-    post:
-      tags: [Buyer - Favorites]
-      summary: Follow a store
-      parameters:
-      - {$ref: '#/components/parameters/IdParam'}
-      - $ref: '#/components/parameters/CsrfHeader'
-      responses:
-        '204': {description: Store followed}
-      x-csrf-required: true
-    delete:
-      tags: [Buyer - Favorites]
-      summary: Unfollow a store
-      parameters:
-      - {$ref: '#/components/parameters/IdParam'}
-      - $ref: '#/components/parameters/CsrfHeader'
-      responses:
-        '204': {description: Store unfollowed}
-      x-csrf-required: true
-
 ### BUYER
   /buyer/profile:
     get:
@@ -2550,7 +2699,7 @@ paths:
   /buyer/addresses/{id}:
     patch:
       tags: [Buyer - Profile & Settings]
-      summary: Update delivery address
+      summary: Partially update delivery address, including default selection
       parameters:
       - {$ref: '#/components/parameters/IdParam'}
       - $ref: '#/components/parameters/CsrfHeader'
@@ -2558,7 +2707,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: {$ref: '#/components/schemas/Address'}
+            schema: {$ref: '#/components/schemas/AddressUpdateRequest'}
       responses:
         '200':
           description: Updated address
@@ -2574,17 +2723,6 @@ paths:
       - $ref: '#/components/parameters/CsrfHeader'
       responses:
         '204': {description: Address deleted}
-      x-csrf-required: true
-
-  /buyer/addresses/{id}/default:
-    patch:
-      tags: [Buyer - Profile & Settings]
-      summary: Set default delivery address
-      parameters:
-      - {$ref: '#/components/parameters/IdParam'}
-      - $ref: '#/components/parameters/CsrfHeader'
-      responses:
-        '204': {description: Default address updated}
       x-csrf-required: true
 
   /buyer/payment-methods:
@@ -2628,7 +2766,7 @@ paths:
         required: true
         content:
           application/json:
-            schema: {$ref: '#/components/schemas/AddPaymentMethodRequest'}
+            schema: {$ref: '#/components/schemas/PatchPaymentMethodRequest'}
       responses:
         '200':
           description: Payment method updated
@@ -2644,17 +2782,6 @@ paths:
       - $ref: '#/components/parameters/CsrfHeader'
       responses:
         '204': {description: Payment method removed}
-      x-csrf-required: true
-
-  /buyer/payment-methods/{id}/default:
-    patch:
-      tags: [Buyer - Profile & Settings]
-      summary: Set default payment method
-      parameters:
-      - {$ref: '#/components/parameters/IdParam'}
-      - $ref: '#/components/parameters/CsrfHeader'
-      responses:
-        '204': {description: Default payment method updated}
       x-csrf-required: true
 
   /buyer/preferences:
@@ -2852,39 +2979,50 @@ paths:
               schema: {$ref: '#/components/schemas/Order'}
         '404': {$ref: '#/components/responses/NotFound'}
 
-  /orders/{id}/cancel:
-    post:
+    patch:
       tags: [Buyer - Checkout & Orders]
-      summary: Cancel eligible order
+      summary: Cancel an eligible order by updating its state
       parameters:
       - {$ref: '#/components/parameters/IdParam'}
       - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              properties:
+                status: {type: string, enum: [cancelled]}
+                cancelReason: {type: string, nullable: true}
       responses:
         '200':
-          description: Cancelled order
+          description: Order cancelled
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Order'}
         '409': {description: Order is no longer cancellable}
       x-csrf-required: true
 
-  /favorites/products:
+  /buyer/favorites/products:
     get:
       tags: [Buyer - Favorites]
       summary: List favorite products
+      x-required-roles: [buyer]
       responses:
         '200':
-          description: Favorite products
+          description: Favorite products with display details from the product service
           content:
             application/json:
               schema:
                 type: array
-                items: {$ref: '#/components/schemas/Product'}
+                items: {$ref: '#/components/schemas/FavoriteProduct'}
 
-  /favorites/products/{productId}:
+  /buyer/favorites/products/{productId}:
     post:
       tags: [Buyer - Favorites]
       summary: Add product to favorites
+      x-required-roles: [buyer]
       parameters:
       - name: productId
         in: path
@@ -2901,6 +3039,7 @@ paths:
     delete:
       tags: [Buyer - Favorites]
       summary: Remove product from favorites
+      x-required-roles: [buyer]
       parameters:
       - name: productId
         in: path
@@ -2915,10 +3054,11 @@ paths:
               schema: {$ref: '#/components/schemas/FavoriteToggleResponse'}
       x-csrf-required: true
 
-  /favorites/stores:
+  /buyer/favorites/stores:
     get:
       tags: [Buyer - Favorites]
       summary: List followed stores
+      x-required-roles: [buyer]
       responses:
         '200':
           description: Followed stores
@@ -2927,6 +3067,28 @@ paths:
               schema:
                 type: array
                 items: {$ref: '#/components/schemas/Store'}
+
+  /buyer/favorites/stores/{storeId}:
+    parameters:
+    - name: storeId
+      in: path
+      required: true
+      schema: {type: string, format: uuid}
+    - $ref: '#/components/parameters/CsrfHeader'
+    post:
+      tags: [Buyer - Favorites]
+      summary: Follow a store
+      x-required-roles: [buyer]
+      responses:
+        '204': {description: Store followed}
+      x-csrf-required: true
+    delete:
+      tags: [Buyer - Favorites]
+      summary: Unfollow a store
+      x-required-roles: [buyer]
+      responses:
+        '204': {description: Store unfollowed}
+      x-csrf-required: true
 
 
 ### SELLER
@@ -3311,6 +3473,31 @@ paths:
           content:
             application/json:
               schema: {$ref: '#/components/schemas/Product'}
+      x-csrf-required: true
+    patch:
+      tags: [Seller - Products]
+      summary: Submit a seller product for moderation by updating its state
+      parameters:
+      - {$ref: '#/components/parameters/IdParam'}
+      - $ref: '#/components/parameters/CsrfHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [moderationStatus]
+              additionalProperties: false
+              properties:
+                moderationStatus: {type: string, enum: [pending]}
+      responses:
+        '200':
+          description: Product submitted with moderationStatus pending
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/Product'}
+        '404': {$ref: '#/components/responses/NotFound'}
+        '409': {description: Product is not in draft or rejected state}
       x-csrf-required: true
     delete:
       tags: [Seller - Products]
@@ -3786,6 +3973,13 @@ paths:
                     type: array
                     items: {$ref: '#/components/schemas/User'}
                   meta: {$ref: '#/components/schemas/PaginationMeta'}
+                  counts:
+                    type: object
+                    properties:
+                      all: {type: integer}
+                      buyer: {type: integer}
+                      seller: {type: integer}
+                      admin: {type: integer}
 
   /admin/users/{id}:
     get:
@@ -3800,7 +3994,6 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/User'}
 
-  /admin/users/{id}/status:
     patch:
       tags: [Admin - Users]
       summary: Suspend or reactivate user
@@ -3821,6 +4014,87 @@ paths:
             application/json:
               schema: {$ref: '#/components/schemas/User'}
       x-csrf-required: true
+
+  /admin/stores:
+    get:
+      tags: [Admin - Stores]
+      summary: List platform stores
+      x-required-roles: [admin, super_admin]
+      parameters:
+      - {$ref: '#/components/parameters/SearchParam'}
+      - {$ref: '#/components/parameters/PageParam'}
+      - {$ref: '#/components/parameters/LimitParam'}
+      - name: rating
+        in: query
+        schema: {type: string, enum: [all, '5', '4', '3']}
+      - name: products
+        in: query
+        schema: {type: string, enum: [all, small, medium, large]}
+      - name: followers
+        in: query
+        schema: {type: string, enum: [all, small, medium, large]}
+      - name: revenue
+        in: query
+        schema: {type: string, enum: [all, low, medium, high]}
+      - name: location
+        in: query
+        schema: {type: string}
+      - name: verified
+        in: query
+        schema: {type: string, enum: [all, verified, unverified]}
+      - name: year
+        in: query
+        schema: {type: string}
+      responses:
+        '200':
+          description: Platform stores
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: '#/components/schemas/AdminStore'}
+                  meta: {$ref: '#/components/schemas/PaginationMeta'}
+
+  /admin/stores/{id}:
+    get:
+      tags: [Admin - Stores]
+      summary: Get platform store details
+      x-required-roles: [admin, super_admin]
+      parameters:
+      - {$ref: '#/components/parameters/IdParam'}
+      responses:
+        '200':
+          description: Platform store details
+          content:
+            application/json:
+              schema: {$ref: '#/components/schemas/AdminStore'}
+
+  /admin/stores/{id}/orders:
+    get:
+      tags: [Admin - Stores]
+      summary: List orders for a platform store
+      x-required-roles: [admin, super_admin]
+      parameters:
+      - {$ref: '#/components/parameters/IdParam'}
+      - {$ref: '#/components/parameters/PageParam'}
+      - {$ref: '#/components/parameters/LimitParam'}
+      responses:
+        '200':
+          description: Store orders
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [data, meta]
+                properties:
+                  data:
+                    type: array
+                    items: {$ref: '#/components/schemas/Order'}
+                  meta: {$ref: '#/components/schemas/PaginationMeta'}
 
   /admin/sellers/applications:
     get:
@@ -3844,6 +4118,13 @@ paths:
                     type: array
                     items: {$ref: '#/components/schemas/SellerApplication'}
                   meta: {$ref: '#/components/schemas/PaginationMeta'}
+                  counts:
+                    type: object
+                    properties:
+                      all: {type: integer}
+                      pending: {type: integer}
+                      approved: {type: integer}
+                      rejected: {type: integer}
 
   /admin/sellers/applications/{id}:
     get:
@@ -3887,6 +4168,12 @@ paths:
       - name: status
         in: query
         schema: {type: string, enum: [all, approved, pending, rejected, inactive]}
+      - name: sortBy
+        in: query
+        schema: {type: string, enum: [price, status, submitted]}
+      - name: sortDirection
+        in: query
+        schema: {type: string, enum: [asc, desc]}
       responses:
         '200':
           description: Products for moderation
@@ -3901,7 +4188,11 @@ paths:
                   meta: {$ref: '#/components/schemas/PaginationMeta'}
                   counts:
                     type: object
-                    additionalProperties: {type: integer}
+                    properties:
+                      all: {type: integer}
+                      approved: {type: integer}
+                      pending: {type: integer}
+                      rejected: {type: integer}
       x-required-roles:
       - admin
       - super_admin
@@ -4008,7 +4299,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Order'
-  /delivery/orders/{id}/status:
     patch:
       tags:
       - Delivery
@@ -4110,7 +4400,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DeliveryAgent'
-  /delivery/agents/me/status:
     patch:
       tags:
       - Delivery
@@ -4225,7 +4514,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
-  /moderator/products/{id}/moderation:
     patch:
       tags:
       - Moderator - Products
@@ -4480,6 +4768,21 @@ paths:
         in: query
         schema:
           $ref: '#/components/schemas/OrderStatus'
+      - name: paymentMethod
+        in: query
+        schema:
+          type: string
+          enum: [mvola, orange_money, card, cod]
+      - name: sortAmount
+        in: query
+        schema:
+          type: string
+          enum: [asc, desc]
+      - name: sortDate
+        in: query
+        schema:
+          type: string
+          enum: [asc, desc]
       - name: deliveryStatus
         in: query
         schema:
@@ -4516,6 +4819,18 @@ paths:
                       $ref: '#/components/schemas/Order'
                   meta:
                     $ref: '#/components/schemas/PaginationMeta'
+                  counts:
+                    type: object
+                    properties:
+                      all: {type: integer}
+                      pending: {type: integer}
+                      confirmed: {type: integer}
+                      processing: {type: integer}
+                      preparing: {type: integer}
+                      shipped: {type: integer}
+                      delivered: {type: integer}
+                      cancelled: {type: integer}
+                      totalPrice: {type: number}
   /admin/orders/{id}:
     get:
       tags:
@@ -4533,7 +4848,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Order'
-  /admin/orders/{id}/status:
     patch:
       tags:
       - Admin - Orders
@@ -4670,6 +4984,11 @@ paths:
           - pending
           - failed
           - refunded
+      - name: method
+        in: query
+        schema:
+          type: string
+          enum: [mvola, orange_money, card, cod]
       - $ref: '#/components/parameters/DateFromParam'
       - $ref: '#/components/parameters/DateToParam'
       responses:
@@ -4766,7 +5085,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Product'
-  /admin/products/{id}/moderation:
     patch:
       tags:
       - Admin - Products
@@ -4932,7 +5250,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/Promotion'
-  /admin/promotions/{id}/status:
     patch:
       tags:
       - Admin - Promotions
@@ -5002,7 +5319,7 @@ paths:
                       $ref: '#/components/schemas/Review'
                   meta:
                     $ref: '#/components/schemas/PaginationMeta'
-  /admin/reviews/{id}/status:
+  /admin/reviews/{id}:
     patch:
       tags:
       - Admin - Reviews
@@ -5202,7 +5519,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/AdminAccount'
-  /admin/admins/{id}/status:
     patch:
       tags:
       - Admin - Admin Accounts

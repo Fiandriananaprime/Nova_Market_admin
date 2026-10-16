@@ -89,8 +89,8 @@ export default function AdminLayout() {
   );
 
   return (
-    <div className="h-screen flex overflow-hidden bg-background">
-      <aside className="hidden md:flex flex-col flex-shrink-0">
+    <div className="flex h-screen overflow-hidden bg-background">
+      <aside className="hidden w-[252px] shrink-0 border-r border-white/10 md:flex md:flex-col">
         <Sidebar />
       </aside>
 
@@ -104,14 +104,15 @@ export default function AdminLayout() {
       )}
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="h-16 bg-card border-b border-border flex items-center gap-3 px-4 sm:px-6 flex-shrink-0">
-          <button className="md:hidden p-2 text-muted-foreground hover:bg-secondary rounded-lg" onClick={() => setSidebarOpen(true)}>
+        <header className="z-20 flex h-[68px] shrink-0 items-center gap-3 border-b border-border bg-card/95 px-4 backdrop-blur sm:px-6">
+          <button aria-label={t('Open navigation')} className="rounded-lg p-2 text-muted-foreground transition hover:bg-secondary md:hidden" onClick={() => setSidebarOpen(true)}>
             <Menu className="w-5 h-5" />
           </button>
           <div className="flex-1">
             <h1 className="font-semibold text-sm font-display text-secondary-foreground hidden sm:block">
-              {navItems.find(i => isNavItemActive(i.to))?.label || 'Admin Dashboard'}
+              {navItems.find(i => isNavItemActive(i.to))?.label || t('Admin Dashboard')}
             </h1>
+            <p className="hidden text-[10px] text-muted-foreground sm:block">{t('NovaMarket operations')}</p>
           </div>
           <div className="flex items-center gap-1">
             <div className="relative hidden sm:block">
@@ -125,13 +126,12 @@ export default function AdminLayout() {
                 >
                   <option value="en">English</option>
                   <option value="fr">Français</option>
-                  <option value="mg">Malagasy</option>
                 </select>
 
                 <ChevronDown className="absolute right-2.5 w-3.5 h-3.5 pointer-events-none text-muted-foreground" />
               </div>
             </div>
-            <button onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')} className="p-2 text-muted-foreground hover:bg-secondary rounded-lg transition-colors">
+            <button aria-label={t(resolvedTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme')} onClick={() => setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')} className="rounded-lg p-2 text-muted-foreground transition-colors hover:bg-secondary">
               {resolvedTheme === 'dark' ? <Sun className="w-4.5 h-4.5" /> : <Moon className="w-4.5 h-4.5" />}
             </button>
             <button className="relative p-2 text-muted-foreground hover:bg-secondary rounded-lg transition-colors">
@@ -145,7 +145,7 @@ export default function AdminLayout() {
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6 xl:p-7">
           <Outlet />
         </main>
       </div>

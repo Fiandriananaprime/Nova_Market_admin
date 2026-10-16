@@ -35,6 +35,8 @@ const statusConfig: Record<
 const StoreProductCard = ({ product }: { product: Product }) => {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const displayStatus = product.moderationStatus ?? product.status;
+  const defaultImage = product.images?.find((image) => image.isDefault) ?? product.images?.[0];
   return (
     <div
       className="
@@ -53,34 +55,30 @@ const StoreProductCard = ({ product }: { product: Product }) => {
     >
       {/* Image */}
       <div className="relative overflow-hidden bg-secondary">
-        <img
-          src={product.image}
-          alt={product.name}
-          className="
+        {defaultImage ? (
+          <img
+            src={defaultImage.url}
+            alt={product.name}
+            className="
             w-full h-40
             object-cover
             group-hover:scale-105
             transition-transform
             duration-300
           "
-        />
-
-        {/* Discount */}
-        {(product.discount ?? 0) > 0 && (
-          <Badge
-            variant="danger"
-            className="absolute top-2 left-2"
-          >
-            -{product.discount}%
-          </Badge>
+          />
+        ) : (
+          <div className="h-40 w-full bg-muted" />
         )}
 
         {/* Status */}
-        <div className="absolute top-2 right-2">
-          <Badge variant={statusConfig[product.status].variant}>
-            {statusConfig[product.status].label}
-          </Badge>
-        </div>
+        {displayStatus && statusConfig[displayStatus] && (
+          <div className="absolute top-2 right-2">
+            <Badge variant={statusConfig[displayStatus].variant}>
+              {statusConfig[displayStatus].label}
+            </Badge>
+          </div>
+        )}
       </div>
 
       {/* Content */}
@@ -104,25 +102,19 @@ const StoreProductCard = ({ product }: { product: Product }) => {
               {formatPrice(product.price)}
             </span>
 
-            {product.originalPrice && (
-              <span className="text-xs text-muted-foreground line-through">
-                {formatPrice(product.originalPrice)}
-              </span>
-            )}
           </div>
         </div>
 
         {/* Rating */}
         <div className="flex items-center justify-between">
-          <Rating
-            value={product.rating}
-            showCount={false}
-            size="xs"
-          />
-
-          <span className="text-xs text-muted-foreground">
-            {product.rating?.toFixed(1) ?? "0.0"} / 5
-          </span>
+          {product.rating !== undefined && (
+            <>
+              <Rating value={product.rating} showCount={false} size="xs" />
+              <span className="text-xs text-muted-foreground">
+                {product.rating.toFixed(1)} / 5
+              </span>
+            </>
+          )}
         </div>
 
         {/* Admin information */}

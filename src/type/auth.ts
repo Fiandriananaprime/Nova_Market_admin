@@ -1,44 +1,43 @@
-import { User } from './user';
+import type { Address } from "./user";
 
-export type status = "pending" | "approved" | "rejected";
+export type UserRole = "buyer" | "seller" | "admin";
+export type UserStatus = "active" | "suspended";
 
 export interface LoginRequest {
-  email: string;
+  identifier: string;
   password: string;
   remember: boolean;
 }
 
-export interface AuthTokens {
-    accessToken: string;
-    refreshToken: string;
-    expiresIn: number;
+export interface AuthUser {
+  id: string;
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone?: string | null;
+  role: UserRole;
+  status: UserStatus;
+  avatarUrl?: string | null;
+  emailVerified: boolean;
+  phoneVerified: boolean;
+  createdAt?: string;
+  updatedAt?: string;
+  lastLoginAt?: string | null;
+  addresses?: Address[];
 }
 
-export interface AuthResponse {
-  tokens: AuthTokens;
-  user: User;
+export interface AuthRefreshResponse {
+  user?: AuthUser;
+  expiresAt?: string;
+}
+
+export interface CsrfToken {
+  token: string;
 }
 
 export interface RegisterRequest {
-    firstName: string;
-    lastName: string;
-    email: string;
-    password: string;
-}
-
-export interface RegisterSellerRequest extends RegisterRequest {
-   businessName: string;
-   phone: string;
-   location: string;
-}
-
-export interface RegisterSellerResponse {
-    id: string;
-    businessName: string;
-    owner: string;
-    email: string;
-    phone: string;
-    location: string;
-    date: string;
-    status: status;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
 }

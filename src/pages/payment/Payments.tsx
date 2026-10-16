@@ -80,10 +80,10 @@ export default function AdminPayments() {
     loadTransactions();
   }, [page, limit, methodFilter, statusFilter]);
 
-  const handleRefund = async (id: string) => {
+  const handleRefund = async (transaction: Transaction) => {
     try {
-      setRefundingId(id);
-      await refundTransaction(id);
+      setRefundingId(transaction.id);
+      await refundTransaction(transaction.id, transaction.amount);
       toast(t('Refund initiated successfully'), 'success');
       await loadTransactions();
     } catch (error) {
@@ -167,7 +167,7 @@ export default function AdminPayments() {
       render: (item) => (
         <Badge
           variant={
-            item.status === 'paid'
+            item.status === 'completed'
               ? 'success'
               : item.status === 'pending'
                 ? 'warning'
@@ -189,11 +189,11 @@ export default function AdminPayments() {
       key: 'action',
       header: t('Action'),
       render: (item) =>
-        item.status === 'paid' ? (
+        item.status === 'completed' ? (
           <button
             type="button"
             disabled={refundingId === item.id}
-            onClick={() => handleRefund(item.id)}
+            onClick={() => handleRefund(item)}
             className="px-3 py-1.5 rounded-lg border border-border text-xs font-medium hover:bg-secondary disabled:opacity-50"
           >
             {refundingId === item.id ? (

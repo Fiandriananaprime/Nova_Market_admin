@@ -13,7 +13,7 @@ export interface AdminGetProductsQueryParams {
   search?: string;
   page?: number;
   limit?: number;
-  status?: 'approved' | 'pending' | 'rejected';
+  status?: 'all' | 'approved' | 'pending' | 'rejected' | 'inactive';
   sortBy?: 'price' | 'status' | 'submitted';
   sortDirection?: 'asc' | 'desc';
 }
